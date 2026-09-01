@@ -94,3 +94,62 @@ def test_detects_missing_settlement():
 
     assert result.status == ReconciliationStatus.EXCEPTION
     assert result.exception_type is not None
+def test_detects_bank_mismatch():
+    payment = create_payment()
+    settlement = create_settlement()
+    bank_transaction = create_bank_transaction(amount="900.00")
+
+    result = reconcile_payment(
+        payment,
+        [settlement],
+        [bank_transaction],
+    )
+
+    assert result.status == ReconciliationStatus.EXCEPTION
+    assert result.exception_type is not None
+    assert result.bank_amount == Decimal("900.00")
+    assert result.difference == Decimal("82.30")
+
+
+def test_detects_duplicate_settlement():
+    payment = create_payment()
+    settlement = create_settlement()
+    duplicate_settlement = create_settlement()
+
+    result = reconcile_payment(
+        payment,
+        [settlement, duplicate_settlement],
+        [],
+    )
+
+    assert result.status == ReconciliationStatus.EXCEPTION
+    assert result.exception_type is not None
+    assert result.settled_amount == Decimal("1964.60")
+
+
+def test_detects_timing_difference():
+    payment = create_payment()
+    settlement = create_settlement()
+    bank_transaction = BankTransaction(
+        bank_reference="BANK_001",
+        settlement_id="SET_001",
+        amount=Decimal("982.30"),
+        transaction_type=BankTransactionType.CREDIT,
+        transaction_date=datetime(
+            2026,
+            9,
+            4,
+            10,
+            0,
+            tzinfo=timezone.utc,
+        ),
+    )
+
+    result = reconcile_payment(
+        payment,
+        [settlement],
+        [bank_transaction],
+    )
+
+    assert result.status == ReconciliationStatus.EXCEPTION
+    assert result.exception_type is not None
