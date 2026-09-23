@@ -5,8 +5,12 @@ description = "AI-powered financial reconciliation and investigation platform."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "fastapi>=0.141.1",
+    "groq>=1.7.0",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
+    "sqlalchemy>=2.0.52",
+    "uvicorn>=0.52.4",
 ]
 
 [build-system]
